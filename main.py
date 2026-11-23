@@ -3,7 +3,7 @@ import shapely
 from shapely import geometry
 import simplekml
 
-gdf = gpd.read_file("data/cb_2018_us_county_500k/cb_2018_us_county_500k.kml")
+gdf = gpd.read_file("cb_2018_us_county_500k.kml")
 
 void_counties = [
     # [state fips, county fips]

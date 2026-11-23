@@ -5,11 +5,6 @@ import simplekml
 
 gdf = gpd.read_file("data/cb_2018_us_county_500k/cb_2018_us_county_500k.kml")
 
-counties = {
-    statefp: group.set_index("COUNTYFP")["geometry"].to_dict()
-    for statefp, group in gdf.groupby("STATEFP")
-}
-
 void_counties = [
     # [state fips, county fips]
     ["27", "053"],
@@ -26,6 +21,11 @@ void_circles = [
 ]
 
 void_circles = [[y, x, r] for x, y, r in void_circles]
+
+counties = {
+    statefp: group.set_index("COUNTYFP")["geometry"].to_dict()
+    for statefp, group in gdf.groupby("STATEFP")
+}
 
 polygons = []
 
@@ -46,8 +46,8 @@ for lat, lon, radius_km in void_circles:
     gdf_projected["geometry"] = gdf_projected.geometry.buffer(
         1000 * radius_km, quad_segs=64
     )
-    gdf_test = gdf_projected.to_crs("EPSG:4326")
-    polygons.extend(gdf_test.geometry)
+    gdf_circle = gdf_projected.to_crs("EPSG:4326")
+    polygons.extend(gdf_circle.geometry)
 
 polygons = [
     shapely.MultiPolygon([p]) if isinstance(p, shapely.Polygon) else p for p in polygons
@@ -55,9 +55,9 @@ polygons = [
 
 composite = shapely.union_all(polygons)
 
-gdf_test = gpd.GeoDataFrame(
+gdf_out = gpd.GeoDataFrame(
     {"Name": ["comp"], "Description": ["comp"]}, geometry=[composite], crs="EPSG:4326"
 )
 
-gdf["OGR_STYLE"] = "BRUSH(fc:#F0F0F0)"
-gdf_test.to_file("out.kml", driver="LIBKML")
+gdf_out["OGR_STYLE"] = "BRUSH(fc:#F0F0F0)"
+gdf_out.to_file("out.kml", driver="LIBKML")
